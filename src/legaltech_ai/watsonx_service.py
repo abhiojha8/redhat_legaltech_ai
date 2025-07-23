@@ -5,7 +5,7 @@ Simple watsonx.ai service for LegalTech AI application.
 import os
 import requests
 import json
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from dotenv import load_dotenv
 
 class WatsonxService:
@@ -19,11 +19,13 @@ class WatsonxService:
         self.url = os.getenv('WATSONX_URL') 
         self.project_id = os.getenv('WATSONX_PROJECT_ID')
         self.model_id = os.getenv('MODEL_ID', 'meta-llama/llama-3-3-70b-instruct')
+        self.embedding_model_id = os.getenv('WATSONX_EMBEDDING_MODEL', 'ibm/slate-125m-english-rtrvr')
         
         if not all([self.api_key, self.url, self.project_id]):
             raise ValueError("Missing required watsonx.ai configuration")
         
         self._token = None
+        self._embedding_client = None
     
     def _get_access_token(self) -> str:
         """Get IBM Cloud access token."""
@@ -129,3 +131,41 @@ Answer:"""
                 'status': 'error',
                 'error': str(e)
             }
+    
+    def _get_embedding_client(self):
+        """Initialize watsonx.ai embeddings client."""
+        if self._embedding_client is None:
+            try:
+                from ibm_watsonx_ai.foundation_models import Embeddings
+                from ibm_watsonx_ai import Credentials
+                
+                credentials = Credentials(api_key=self.api_key, url=self.url)
+                self._embedding_client = Embeddings(
+                    model_id=self.embedding_model_id,
+                    credentials=credentials,
+                    project_id=self.project_id,
+                    batch_size=1000,
+                    concurrency_limit=5,
+                    persistent_connection=True
+                )
+            except ImportError as e:
+                raise ImportError("ibm-watsonx-ai package is required for embeddings. Install with: pip install ibm-watsonx-ai>=1.1.2") from e
+        return self._embedding_client
+    
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """Generate embeddings for multiple documents using watsonx.ai."""
+        try:
+            embedding_client = self._get_embedding_client()
+            return embedding_client.embed_documents(texts)
+        except Exception as e:
+            print(f"Embedding documents error: {e}")
+            raise
+    
+    def embed_query(self, text: str) -> List[float]:
+        """Generate embedding for a single query using watsonx.ai."""
+        try:
+            embedding_client = self._get_embedding_client()
+            return embedding_client.embed_query(text)
+        except Exception as e:
+            print(f"Embedding query error: {e}")
+            raise

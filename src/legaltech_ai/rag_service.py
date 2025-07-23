@@ -6,21 +6,22 @@ import os
 import uuid
 from typing import List, Dict, Any
 from dotenv import load_dotenv
+from watsonx_service import WatsonxService
 
 class RAGService:
     """Simple RAG service with ChromaDB for document chunks."""
     
-    def __init__(self):
+    def __init__(self, watsonx_service=None):
         """Initialize the RAG service."""
         load_dotenv()
         self.chunk_size = 1000
         self.chunk_overlap = 200
         self.max_results = 3
         
-        # Initialize ChromaDB and embedding model lazily
+        # Initialize ChromaDB and watsonx service
         self._client = None
         self._collection = None
-        self._embedding_model = None
+        self._watsonx_service = watsonx_service or WatsonxService()
     
     @property
     def client(self):
@@ -42,12 +43,8 @@ class RAGService:
     
     @property
     def embedding_model(self):
-        """Lazy initialization of embedding model."""
-        if self._embedding_model is None:
-            from sentence_transformers import SentenceTransformer
-            # Use a lightweight, fast model suitable for legal text
-            self._embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-        return self._embedding_model
+        """Get watsonx.ai embedding service."""
+        return self._watsonx_service
     
     def chunk_text(self, text: str) -> List[str]:
         """Split text into overlapping chunks."""
@@ -92,8 +89,8 @@ class RAGService:
             if not chunks:
                 return {"success": False, "error": "No chunks created from document"}
             
-            # Generate embeddings
-            embeddings = self.embedding_model.encode(chunks).tolist()
+            # Generate embeddings using watsonx.ai
+            embeddings = self.embedding_model.embed_documents(chunks)
             
             # Create IDs and metadata
             ids = [f"{document_name}_chunk_{i}" for i in range(len(chunks))]
@@ -126,8 +123,8 @@ class RAGService:
     def search_relevant_chunks(self, query: str) -> List[str]:
         """Search for relevant document chunks based on query."""
         try:
-            # Generate query embedding
-            query_embedding = self.embedding_model.encode([query]).tolist()
+            # Generate query embedding using watsonx.ai
+            query_embedding = [self.embedding_model.embed_query(query)]
             
             # Search ChromaDB
             results = self.collection.query(
