@@ -163,8 +163,11 @@ class CallDataService:
                 'customer_id': 'count'
             }).reset_index()
             
-            # Calculate drop rate per area
-            area_analysis['drop_rate'] = (area_analysis['call_drop_cnt_d'] / area_analysis['tot_call_cnt_d']) * 100
+            # Calculate drop rate per area (with division by zero protection)
+            area_analysis['drop_rate'] = area_analysis.apply(
+                lambda row: (row['call_drop_cnt_d'] / row['tot_call_cnt_d']) * 100 if row['tot_call_cnt_d'] > 0 else 0, 
+                axis=1
+            )
             
             # Find areas exceeding TRAI 2% limit
             trai_violation_areas = area_analysis[area_analysis['drop_rate'] > 2.0]
@@ -196,9 +199,13 @@ class CallDataService:
         
         # Method 3: Customer-level drop analysis
         if 'call_drop_cnt_d' in df.columns and 'tot_call_cnt_d' in df.columns:
-            # Find customers with very high individual drop rates
-            df['customer_drop_rate'] = (df['call_drop_cnt_d'] / df['tot_call_cnt_d']) * 100
-            high_drop_customers = df[df['customer_drop_rate'] > 20]  # >20% individual drop rate
+            # Find customers with very high individual drop rates (with division by zero protection)
+            df_temp = df.copy()
+            df_temp['customer_drop_rate'] = df_temp.apply(
+                lambda row: (row['call_drop_cnt_d'] / row['tot_call_cnt_d']) * 100 if row['tot_call_cnt_d'] > 0 else 0, 
+                axis=1
+            )
+            high_drop_customers = df_temp[df_temp['customer_drop_rate'] > 20]  # >20% individual drop rate
             
             if not high_drop_customers.empty:
                 violations["medium_risk"].append({
@@ -325,21 +332,59 @@ class CallDataService:
                     "columns_affected": df.isnull().sum()[df.isnull().sum() > 0].to_dict()
                 })
             
-            # Generate TRAI-specific summary with penalty estimates
-            high_penalty = len(violations["high_risk"]) * 300000  # ₹3 lakh average
-            medium_penalty = len(violations["medium_risk"]) * 125000  # ₹1.25 lakh average
-            low_penalty = len(violations["low_risk"]) * 50000  # ₹50,000 average
+            # Calculate realistic penalty estimates based on actual violations
+            high_penalty = 0
+            medium_penalty = 0
+            low_penalty = 0
+            
+            # Extract penalty amounts from violation descriptions
+            for violation in violations["high_risk"]:
+                if "5-10 lakh" in violation.get("penalty_range", ""):
+                    high_penalty += 750000  # ₹7.5 lakh average
+                elif "2-5 lakh" in violation.get("penalty_range", ""):
+                    high_penalty += 350000  # ₹3.5 lakh average
+                elif "1-2 lakh" in violation.get("penalty_range", ""):
+                    high_penalty += 150000  # ₹1.5 lakh average
+                else:
+                    high_penalty += 100000  # ₹1 lakh default
+            
+            for violation in violations["medium_risk"]:
+                if "50,000" in violation.get("penalty_range", ""):
+                    medium_penalty += 50000
+                else:
+                    medium_penalty += 75000  # ₹75,000 default
+            
+            for violation in violations["low_risk"]:
+                low_penalty += 25000  # ₹25,000 for monitoring/data quality issues
             
             # Check for call drop violations specifically
             call_drop_found = any("Drop" in v.get("type", "") for v in violations["high_risk"] + violations["medium_risk"])
+            
+            # Calculate realistic compliance score based on severity
+            total_penalty = high_penalty + medium_penalty + low_penalty
+            if total_penalty == 0:
+                compliance_score = 100
+            elif total_penalty < 100000:  # <₹1 lakh
+                compliance_score = 85
+            elif total_penalty < 500000:  # <₹5 lakh
+                compliance_score = 60
+            elif total_penalty < 1000000:  # <₹10 lakh
+                compliance_score = 30
+            else:
+                compliance_score = 10
             
             violations["summary"] = {
                 "total_records_analyzed": len(df),
                 "high_risk_count": len(violations["high_risk"]),
                 "medium_risk_count": len(violations["medium_risk"]),
                 "low_risk_count": len(violations["low_risk"]),
-                "trai_compliance_score": max(0, 100 - (len(violations["high_risk"]) * 40 + len(violations["medium_risk"]) * 20 + len(violations["low_risk"]) * 10)),
-                "estimated_penalty_inr": high_penalty + medium_penalty + low_penalty,
+                "trai_compliance_score": compliance_score,
+                "estimated_penalty_inr": total_penalty,
+                "penalty_breakdown": {
+                    "high_risk_penalties": high_penalty,
+                    "medium_risk_penalties": medium_penalty,
+                    "low_risk_penalties": low_penalty
+                },
                 "call_drop_violation_detected": call_drop_found,
                 "regulatory_authority": "TRAI (Telecom Regulatory Authority of India)",
                 "benchmark_year": "2024 QoS Standards",

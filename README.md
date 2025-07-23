@@ -6,7 +6,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.38+-red?style=flat-square&logo=streamlit)](https://streamlit.io)
 [![TRAI](https://img.shields.io/badge/TRAI-Compliant-orange?style=flat-square)](https://trai.gov.in)
 
-A comprehensive LegalTech AI application designed for the Red Hat Hackathon, featuring document analysis, RAG-powered chat, and **TRAI telecom compliance analysis**. Built with IBM watsonx.ai and optimized for OpenShift deployment.
+A comprehensive LegalTech AI application designed for the Red Hat Hackathon, featuring document analysis, intelligent document chat, and **TRAI telecom compliance analysis**. Built with IBM watsonx.ai and optimized for OpenShift deployment.
 
 ## ✨ Key Features
 
@@ -15,11 +15,11 @@ A comprehensive LegalTech AI application designed for the Red Hat Hackathon, fea
 - **AI-Powered Analysis**: Compliance checking and legal summarization
 - **Smart Text Extraction**: Handles complex document structures
 
-### 💬 RAG-Powered Chat Assistant  
-- **Vector Database**: ChromaDB for efficient document retrieval
-- **Semantic Search**: Context-aware responses using sentence transformers
-- **Document Context**: Upload regulations for precise legal guidance
-- **Chunked Processing**: Handles large documents without token limits
+### 💬 Intelligent Document Chat Assistant  
+- **Full Document Context**: Uses complete document or AI-generated summaries
+- **Context-Aware Responses**: Intelligent context management with watsonx.ai
+- **Document Upload**: Upload regulations for precise legal guidance
+- **Smart Summarization**: Automatically summarizes large documents for optimal context
 
 ### 📊 TRAI Telecom Compliance Analysis
 - **Call Data Processing**: Excel (.xlsx) file analysis with 10,000+ records
@@ -39,7 +39,6 @@ A comprehensive LegalTech AI application designed for the Red Hat Hackathon, fea
 ### Prerequisites
 - Python 3.11+
 - IBM watsonx.ai API credentials
-- ChromaDB and sentence-transformers (for RAG)
 
 ### Local Development
 
@@ -47,7 +46,7 @@ A comprehensive LegalTech AI application designed for the Red Hat Hackathon, fea
    ```bash
    git clone <repository-url>
    cd legaltech_ai
-   pip install -r requirements-simple.txt
+   pip install -r requirements.txt
    ```
 
 2. **Configure Environment**:
@@ -58,6 +57,8 @@ A comprehensive LegalTech AI application designed for the Red Hat Hackathon, fea
    WATSONX_URL=https://us-south.ml.cloud.ibm.com
    WATSONX_PROJECT_ID=your_project_id_here
    MODEL_ID=meta-llama/llama-3-3-70b-instruct
+   MAX_CONTEXT_LENGTH=20000
+   MAX_SUMMARY_LENGTH=3000
    PORT=8080
    EOF
    ```
@@ -75,11 +76,11 @@ A comprehensive LegalTech AI application designed for the Red Hat Hackathon, fea
 - Get AI-powered compliance analysis and summaries
 - View detailed reports with legal insights
 
-### 2. RAG Chat Assistant
+### 2. Intelligent Document Chat
 - Upload regulatory documents (e.g., Telecommunications Act 2023)
 - Ask questions and get context-aware answers
-- Documents are automatically chunked and vectorized
-- Semantic search finds relevant sections for responses
+- Documents are intelligently processed for optimal context
+- Large documents are automatically summarized while preserving key legal information
 
 ### 3. Call Data Analysis Mode
 - Upload Excel files with telecom call data
@@ -120,16 +121,14 @@ customer_id | service_area | tot_call_cnt_d | call_drop_cnt_d
 ### Core Technologies
 - **Python 3.11+**: Modern Python with async support
 - **Streamlit**: Interactive web interface
-- **IBM watsonx.ai**: Large language model integration
-- **ChromaDB**: Vector database for RAG
-- **sentence-transformers**: Text embeddings (all-MiniLM-L6-v2)
+- **IBM watsonx.ai**: Large language model integration and embeddings
 - **pandas + openpyxl**: Excel data processing
 
 ### AI & ML Pipeline
 ```
-Document Upload → Text Extraction → Chunking → Vectorization → ChromaDB Storage
-                                                                      ↓
-User Query → Vector Search → Context Retrieval → watsonx.ai → Response
+Document Upload → Text Extraction → Context Analysis → Intelligent Processing
+                                                              ↓
+User Query → Document Context/Summary → watsonx.ai → Response
 ```
 
 ### Deployment Stack
@@ -143,13 +142,13 @@ User Query → Vector Search → Context Retrieval → watsonx.ai → Response
 ```
 src/legaltech_ai/
 ├── main.py                 # Application entry point
-├── watsonx_service.py      # IBM watsonx.ai integration
-├── rag_service.py          # ChromaDB RAG implementation
+├── watsonx_service.py      # IBM watsonx.ai integration with embeddings
+├── document_service.py     # Intelligent document context management
 ├── call_data_service.py    # TRAI compliance analysis
 └── ui/
     └── streamlit_app.py    # Multi-mode Streamlit interface
 
-requirements-simple.txt     # Python dependencies
+requirements.txt            # Python dependencies
 Dockerfile                 # Container definition
 .env                       # Environment configuration
 data.xlsx                  # Sample telecom data (10,000 records)
@@ -230,7 +229,7 @@ oc expose service/legaltech-ai
 3. **Access features**:
    - **Main App**: `https://your-route-host`
    - **Document Analysis**: Upload PDF/DOCX/TXT files
-   - **RAG Chat**: Upload regulations and ask questions
+   - **Intelligent Chat**: Upload regulations and ask questions
    - **TRAI Analysis**: Upload Excel call data files
 
 ### Configuration Management
@@ -275,11 +274,11 @@ The `openshift-deployment.yaml` includes:
 
 ## 📊 Performance & Monitoring
 
-### RAG Performance
-- **ChromaDB**: In-memory vector storage for fast retrieval
-- **Chunking**: 1000-character chunks with 200-character overlap
-- **Search**: Top-3 relevant chunks per query
-- **Context Limit**: 4000 characters to stay within token limits
+### Intelligent Document Processing
+- **Context Management**: Uses full document up to 20K characters
+- **Smart Summarization**: AI-generated summaries for large documents
+- **Optimized for Llama 3.3 70B**: Context limits tuned for optimal performance
+- **Memory Efficient**: Single document storage with intelligent caching
 
 ### Call Data Processing
 - **Large Dataset Support**: Handles 10,000+ records efficiently
@@ -290,7 +289,7 @@ The `openshift-deployment.yaml` includes:
 
 ### Innovation
 - **TRAI Compliance AI**: First-of-its-kind automated telecom compliance
-- **RAG Integration**: Advanced retrieval-augmented generation
+- **Intelligent Document Processing**: Advanced context management without vector databases
 - **Multi-modal Analysis**: Documents + structured data + chat
 
 ### Production Readiness
@@ -320,8 +319,8 @@ The `openshift-deployment.yaml` includes:
 
 ### Regulatory Research
 1. Upload multiple regulatory documents
-2. Chat with the knowledge base
-3. Get comparative analysis across regulations
+2. Chat with intelligent document context
+3. Get comprehensive analysis across regulations
 4. Generate compliance checklists
 
 ## 📜 License
@@ -331,9 +330,9 @@ MIT License - Built for Red Hat Hackathon
 ## 🤝 Acknowledgments
 
 - **Red Hat OpenShift**: Cloud-native platform
-- **IBM watsonx.ai**: Advanced AI capabilities  
+- **IBM watsonx.ai**: Advanced AI capabilities and embeddings
 - **TRAI**: Telecommunications regulatory framework
-- **Open Source Community**: ChromaDB, Streamlit, sentence-transformers
+- **Open Source Community**: Streamlit, pandas, and Python ecosystem
 
 ---
 

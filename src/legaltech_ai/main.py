@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import sys
-sys.modules["sqlite3"] = __import__("pysqlite3")
 
 import os
 import subprocess
