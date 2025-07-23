@@ -1,0 +1,16 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: legaltech-ai
+spec:
+  source:
+    git:
+      uri: 'https://github.ibm.com/apac-genai-coe-squad/redhat_legaltech_ai.git'
+      ref: 'main'    # or your branch name
+  strategy:
+    dockerStrategy:
+      dockerfilePath: Dockerfile   # Path to Dockerfile (relative to repo root)
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'legaltech-ai:latest'
