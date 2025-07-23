@@ -1,0 +1,39 @@
+# Core dependencies
+streamlit>=1.38.0
+requests>=2.31.0
+
+# IBM watsonx.ai integration
+ibm-watson-machine-learning>=1.0.360
+ibm-cloud-sdk-core>=3.18.0
+
+# Document processing
+python-docx>=1.1.0
+pypdf>=4.0.0
+
+# Configuration and environment
+python-dotenv>=1.0.1
+
+# Logging and monitoring
+structlog>=24.1.0
+
+# Security and networking
+cryptography>=41.0.0
+urllib3>=2.0.0
+
+# HTTP client with retry support
+requests-toolbelt>=1.0.0
+
+# Core utilities - use pre-compiled wheels for Python 3.13
+numpy>=1.26.0,<2.0.0
+typing-extensions>=4.8.0
+
+# Development and testing (optional)
+pytest>=8.0.0
+pytest-cov>=4.0.0
+black>=24.0.0
+flake8>=7.0.0
+mypy>=1.8.0
+ruff>=0.7.0
+
+# Production WSGI server
+gunicorn>=22.0.0
