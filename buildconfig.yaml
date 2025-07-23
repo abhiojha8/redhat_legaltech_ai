@@ -5,7 +5,7 @@ metadata:
 spec:
   source:
     git:
-      uri: 'https://github.ibm.com/apac-genai-coe-squad/redhat_legaltech_ai.git'
+      uri: 'https://github.com/abhiojha8/redhat_legaltech_ai.git'
       ref: 'main'    # or your branch name
   strategy:
     dockerStrategy:
