@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application code and example env/data
 COPY src/ src/
 COPY .env.example .env
-COPY data.xlsx .
+COPY data/ data/
 
 # -------- Stage 2: Production --------
 FROM registry.access.redhat.com/ubi9/python-311:latest AS production
@@ -40,7 +40,7 @@ COPY --from=builder /opt/app-root/lib/python3.11/site-packages /opt/app-root/lib
 COPY --from=builder /opt/app-root/bin /opt/app-root/bin
 COPY --from=builder /app/src /app/src
 COPY --from=builder /app/.env /app/
-COPY --from=builder /app/data.xlsx /app/
+COPY --from=builder /app/data /app/data
 
 # Fix permissions for non-root execution
 RUN chown -R 1001:root /app && chmod -R g=u /app
