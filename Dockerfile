@@ -13,9 +13,9 @@ RUN dnf update -y && \
     rm -rf /var/cache/dnf/*
 
 # Copy requirements and install Python dependencies
-COPY requirements-simple.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements-simple.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code and example env/data
 COPY src/ src/
